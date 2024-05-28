@@ -40,8 +40,6 @@ class ViewController: UIViewController {
         
     }
     func initBoard() {
-        
-        
         board.append(a1)
         board.append(a2)
         board.append(a3)
@@ -53,129 +51,111 @@ class ViewController: UIViewController {
         board.append(c3)
     }
     
-    @IBAction func boardTapAction(_ sender: UIButton)
-    {
+    @IBAction func boardTapAction(_ sender: UIButton) {
         addToBoard(sender)
-        
-        if checkForVictory(CROSS) {
-            crossesScore += 1
-            resultAlert(title: "Crosses Win!")
-        }
-        if checkForVictory(NOUGHT)
-        {
-            noughtScore += 1
-            resultAlert(title: "Noughts Win!")
-        }
-        
-        if(fullBoard())
-        {
-            resultAlert(title: "Draw")
-        }
     }
-    func checkForVictory(_ s :String) -> Bool
-    {
+    
+    func checkForVictory(_ s: String) -> Bool {
         // Horizontal Victory
-        if thisSymbol(a1 , s) && thisSymbol(a2, s) && thisSymbol(a3, s) {
-            return true
-        }
-        if thisSymbol(b1 , s) && thisSymbol(b2, s) && thisSymbol(b3, s) {
-            return true
-        }
-        if thisSymbol(c1 , s) && thisSymbol(c2, s) && thisSymbol(c3, s) {
-            return true
-        }
+        if thisSymbol(a1, s) && thisSymbol(a2, s) && thisSymbol(a3, s) { return true }
+        if thisSymbol(b1, s) && thisSymbol(b2, s) && thisSymbol(b3, s) { return true }
+        if thisSymbol(c1, s) && thisSymbol(c2, s) && thisSymbol(c3, s) { return true }
+        
         // Vertical Victory
-        if thisSymbol(a1 , s) && thisSymbol(b1, s) && thisSymbol(c1, s) {
-            return true
-        }
-        if thisSymbol(a2 , s) && thisSymbol(b2, s) && thisSymbol(c2, s) {
-            return true
-        }
-        if thisSymbol(a3 , s) && thisSymbol(b3, s) && thisSymbol(c3, s) {
-            return true
-        }
+        if thisSymbol(a1, s) && thisSymbol(b1, s) && thisSymbol(c1, s) { return true }
+        if thisSymbol(a2, s) && thisSymbol(b2, s) && thisSymbol(c2, s) { return true }
+        if thisSymbol(a3, s) && thisSymbol(b3, s) && thisSymbol(c3, s) { return true }
+        
         // Diagonal Victory
-        if thisSymbol(a1 , s) && thisSymbol(b2, s) && thisSymbol(c3, s) {
-            return true
-        }
-        if thisSymbol(a3 , s) && thisSymbol(b2, s) && thisSymbol(c1, s) {
-            return true
-      
-        }
+        if thisSymbol(a1, s) && thisSymbol(b2, s) && thisSymbol(c3, s) { return true }
+        if thisSymbol(a3, s) && thisSymbol(b2, s) && thisSymbol(c1, s) { return true }
+        
         return false
     }
-    func thisSymbol(_ button: UIButton,  _ symbol: String) -> Bool
-    {
+    
+    func thisSymbol(_ button: UIButton, _ symbol: String) -> Bool {
         return button.title(for: .normal) == symbol
     }
     
-    func resultAlert(title: String)
-    {
-        let message = "\nNoughts" + String(noughtScore) + "\n\nCrosses" + String(crossesScore)
-        let ac = UIAlertController(title: title, message: nil, preferredStyle: .actionSheet)
+    func resultAlert(title: String) {
+        let message = "\nNoughts: \(noughtScore)\nCrosses: \(crossesScore)"
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         ac.addAction(UIAlertAction(title: "Reset", style: .default, handler: { (_) in
             self.resetBoard()
         }))
         self.present(ac, animated: true)
     }
+    
     func resetBoard() {
-        for button in board
-        {
+        for button in board {
             button.setTitle(nil, for: .normal)
             button.isEnabled = true
         }
-        if(firstTurn == Turn.Nought) {
-            
-        
-        firstTurn = Turn.Cross
-        turnLabel.text = CROSS
+        firstTurn = firstTurn == .Nought ? .Cross : .Nought
+        currentTurn = firstTurn
+        turnLabel.text = currentTurn == .Nought ? NOUGHT : CROSS
     }
-   else if firstTurn == Turn.Cross
-   {
-        
-    firstTurn = Turn.Nought
-    turnLabel.text = NOUGHT
-}
-     currentTurn = firstTurn
-}
     
-    func fullBoard() -> Bool
-    {
-        for button in board
-        {
-    if button.title(for: .normal) == nil
-    {
-        return false
-    }
-}
-return true
-}
-    func addToBoard(_ sender: UIButton)
-    {
-        
-     
-        if(sender.title(for: .normal) == nil) {
-            
-            if(currentTurn == Turn.Nought)
-                
-            {
-                
-                sender.setTitle(NOUGHT, for: .normal)
-                currentTurn = Turn.Cross
-                turnLabel.text = CROSS
+    func fullBoard() -> Bool {
+        for button in board {
+            if button.title(for: .normal) == nil {
+                return false
             }
-           else if(currentTurn == Turn.Cross)
-                
-            {
-                
+        }
+        return true
+    }
+    
+    func addToBoard(_ sender: UIButton) {
+        if sender.title(for: .normal) == nil {
+            if currentTurn == .Nought {
+                sender.setTitle(NOUGHT, for: .normal)
+                currentTurn = .Cross
+                turnLabel.text = CROSS
+            } else if currentTurn == .Cross {
                 sender.setTitle(CROSS, for: .normal)
-                currentTurn = Turn.Nought
+                currentTurn = .Nought
                 turnLabel.text = NOUGHT
             }
             sender.isEnabled = false
             
+            // Check for victory or draw after player's move
+            if checkForVictory(CROSS) {
+                crossesScore += 1
+                resultAlert(title: "Crosses Win!")
+            } else if checkForVictory(NOUGHT) {
+                noughtScore += 1
+                resultAlert(title: "Noughts Win!")
+            } else if fullBoard() {
+                resultAlert(title: "Draw")
+            } else {
+                // If the game is not over, let the computer make a move
+                if currentTurn == .Cross {
+                    computerMove()
+                    
+                    // Check for victory or draw after computer's move
+                    if checkForVictory(CROSS) {
+                        crossesScore += 1
+                        resultAlert(title: "Crosses Win!")
+                    } else if checkForVictory(NOUGHT) {
+                        noughtScore += 1
+                        resultAlert(title: "Noughts Win!")
+                    } else if fullBoard() {
+                        resultAlert(title: "Draw")
+                    }
+                }
+            }
         }
     }
     
-    
+    func computerMove() {
+        var availableButtons: [UIButton] = []
+        for button in board {
+            if button.title(for: .normal) == nil {
+                availableButtons.append(button)
+            }
+        }
+        if let selectedButton = availableButtons.randomElement() {
+            addToBoard(selectedButton)
+        }
+    }
 }
